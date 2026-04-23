@@ -5,6 +5,7 @@ import TransactionTable from "../components/TransactionTable";
 import FraudChart from "../components/FraudChart";
 import ClientTable from "../components/ClientTable";
 import AdminSettings from "../components/AdminSettings";
+import { predictFraud } from "../services/api"; // 🔥 API
 
 export default function Dashboard({ setToken }) {
 
@@ -25,7 +26,6 @@ export default function Dashboard({ setToken }) {
   // FORM
   const [form, setForm] = useState({
     amount: "",
-    type: "Normal",
     clientId: 1,
   });
 
@@ -44,58 +44,64 @@ export default function Dashboard({ setToken }) {
   // BLOCK / UNBLOCK
   const blockClient = (id) => {
     setClients(prev =>
-      prev.map(c =>
-        c.id === id ? { ...c, blocked: true } : c
-      )
+      prev.map(c => c.id === id ? { ...c, blocked: true } : c)
     );
   };
 
   const unblockClient = (id) => {
     setClients(prev =>
-      prev.map(c =>
-        c.id === id ? { ...c, blocked: false } : c
-      )
+      prev.map(c => c.id === id ? { ...c, blocked: false } : c)
     );
   };
 
-  // ➕ ADD TRANSACTION (FIXED)
-  const addTransaction = () => {
+  // 🔥 ADD TRANSACTION WITH AI
+  const addTransaction = async () => {
     if (!form.amount) {
       alert("Fill fields!");
       return;
     }
 
-    const isFraud = Math.random() > 0.7;
     const clientId = Number(form.clientId);
 
-    const newTx = {
-      id: Date.now(),
-      amount: "$" + form.amount,
-      type: isFraud ? "Fraud" : "Normal",
-      date: today,
-      clientId,
-    };
-
-    setTransactions(prev => [newTx, ...prev]);
-
-    // reset form (IMPORTANT FIX)
-    setForm({ amount: "", type: "Normal", clientId: 1 });
-    setOpen(false);
-
-    // 🚨 FRAUD ALERT
-    if (isFraud) {
-      setClients(prev =>
-        prev.map(c =>
-          c.id === clientId ? { ...c, blocked: true } : c
-        )
-      );
-
-      setAlert({
-        title: "🚨 FRAUD DETECTED",
-        message: "Client blocked automatically!"
+    try {
+      const res = await predictFraud({
+        amount: Number(form.amount),
+        time: 10,
+        risk: 5,
       });
 
-      setTimeout(() => setAlert(null), 4000);
+      const isFraud = res.data.prediction === "FRAUD";
+
+      const newTx = {
+        id: Date.now(),
+        amount: "$" + form.amount,
+        type: isFraud ? "Fraud" : "Normal",
+        date: today,
+        clientId,
+      };
+
+      setTransactions(prev => [newTx, ...prev]);
+
+      setForm({ amount: "", clientId: 1 });
+      setOpen(false);
+
+      if (isFraud) {
+        setClients(prev =>
+          prev.map(c =>
+            c.id === clientId ? { ...c, blocked: true } : c
+          )
+        );
+
+        setAlert({
+          title: "🚨 FRAUD DETECTED",
+          message: "Client blocked automatically!"
+        });
+
+        setTimeout(() => setAlert(null), 4000);
+      }
+
+    } catch (err) {
+      alert("Backend not reachable ❌");
     }
   };
 
@@ -209,16 +215,6 @@ export default function Dashboard({ setToken }) {
                   setForm({ ...form, amount: e.target.value })
                 }
               />
-
-              <select
-                value={form.type}
-                onChange={(e) =>
-                  setForm({ ...form, type: e.target.value })
-                }
-              >
-                <option value="Normal">Normal</option>
-                <option value="Fraud">Fraud</option>
-              </select>
 
               <select
                 value={form.clientId}
