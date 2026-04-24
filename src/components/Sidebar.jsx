@@ -1,11 +1,11 @@
-export default function Sidebar({ active, setActive, setToken }) {
+export default function Sidebar({ active, setActive, setToken, darkMode, setDarkMode }) {
   return (
     <>
       <style>{`
         .sidebar {
           width: 260px;
           height: 100vh;
-          background: linear-gradient(180deg, #111827, #1f2937);
+          background: linear-gradient(180deg, #0f172a, #1e293b);
           color: white;
           display: flex;
           flex-direction: column;
@@ -14,15 +14,15 @@ export default function Sidebar({ active, setActive, setToken }) {
 
         .logo {
           text-align: center;
-          margin-bottom: 40px;
-          font-size: 20px;
+          margin-bottom: 35px;
+          font-size: 22px;
           font-weight: bold;
         }
 
         .menu {
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          gap: 12px;
         }
 
         .item {
@@ -52,50 +52,52 @@ export default function Sidebar({ active, setActive, setToken }) {
           background: #ef4444;
           color: white;
           cursor: pointer;
-          transition: 0.3s;
         }
 
-        .logout:hover {
-          background: #dc2626;
-          transform: scale(1.05);
+        .darkBtn {
+          margin-top: 15px;
+          padding: 10px;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          background: ${darkMode ? "#fbbf24" : "#1f2937"};
+          color: white;
         }
       `}</style>
 
       <div className="sidebar">
 
-        <h2 className="logo">💳 Fraud System</h2>
+        <div className="logo">💳 Fraud System</div>
 
         <div className="menu">
-
-          <div
-            className={active === "dashboard" ? "item active" : "item"}
-            onClick={() => setActive("dashboard")}
-          >
+          <div className={`item ${active === "dashboard" ? "active" : ""}`}
+            onClick={() => setActive("dashboard")}>
             Dashboard
           </div>
 
-          <div
-            className={active === "analytics" ? "item active" : "item"}
-            onClick={() => setActive("analytics")}
-          >
+          <div className={`item ${active === "analytics" ? "active" : ""}`}
+            onClick={() => setActive("analytics")}>
             Analytics
           </div>
 
-          <div
-            className={active === "clients" ? "item active" : "item"}
-            onClick={() => setActive("clients")}
-          >
+          <div className={`item ${active === "clients" ? "active" : ""}`}
+            onClick={() => setActive("clients")}>
             Clients
           </div>
 
-          <div
-            className={active === "settings" ? "item active" : "item"}
-            onClick={() => setActive("settings")}
-          >
+          <div className={`item ${active === "settings" ? "active" : ""}`}
+            onClick={() => setActive("settings")}>
             Settings
           </div>
-
         </div>
+
+        {/* 🌙 DARK MODE BUTTON */}
+        <button
+          className="darkBtn"
+          onClick={() => setDarkMode(!darkMode)}
+        >
+          {darkMode ? "☀ Light Mode" : "🌙 Dark Mode"}
+        </button>
 
         <button className="logout" onClick={() => setToken(null)}>
           Logout

@@ -1,47 +1,49 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
 
-function App() {
-  const [token, setToken] = useState(null);
+import Sidebar from "./components/Sidebar";
+
+import Dashboard from "./pages/Dashboard";
+import NewTransaction from "./pages/NewTransaction";
+import Clients from "./pages/Clients";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+
+export default function App() {
+
+  const [page, setPage] = useState("dashboard");
+
+  const renderPage = () => {
+    switch (page) {
+
+      case "dashboard":
+        return <Dashboard />;
+
+      case "transaction":
+        return <NewTransaction />;
+
+      case "clients":
+        return <Clients />;
+
+      case "analytics":
+        return <Analytics />;
+
+      case "settings":
+        return <Settings />;
+
+      default:
+        return <Dashboard />;
+    }
+  };
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login setToken={setToken} />} />
-        <Route
-          path="/dashboard"
-          element={
-            token ? <Dashboard setToken={setToken} /> : <Navigate to="/" />
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+    <div style={{ display: "flex" }}>
+
+      <Sidebar setPage={setPage} />
+
+      <div style={{ flex: 1, padding: 20 }}>
+        {renderPage()}
+      </div>
+
+    </div>
   );
 }
-
-export default App;import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-
-function App() {
-  const [token, setToken] = useState(null);
-
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login setToken={setToken} />} />
-        <Route
-          path="/dashboard"
-          element={
-            token ? <Dashboard setToken={setToken} /> : <Navigate to="/" />
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-  );
-}
-
-export default App;

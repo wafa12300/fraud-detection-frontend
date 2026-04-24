@@ -1,64 +1,84 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { predictFraud } from "../services/api";
 
-export default function NewTransaction() {
-
-  const [form, setForm] = useState({
-    amount: "",
-    oldbalanceOrg: "",
-    newbalanceOrig: "",
-    oldbalanceDest: "",
-    newbalanceDest: "",
-    time: "",
-    country_risk: ""
-  });
-
-  const [result, setResult] = useState(null);
+export default function NewTransaction({ onAdd }) {
+  const [amount, setAmount] = useState("");
+  const [client, setClient] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: Number(e.target.value)
-    });
-  };
+  const [result, setResult] = useState(null);
 
   const handleSubmit = async () => {
+    if (!amount || !client) {
+      alert("⚠ Please fill all fields!");
+      return;
+    }
+
     setLoading(true);
+    setResult(null);
+
     try {
-      const res = await predictFraud(form);
-      setResult(res);
+      // 📡 send to AI backend
+      const res = await predictFraud({
+        amount: Number(amount),
+        client: client,
+      });
+
+      const type = res.data.type;
+      setResult(type);
+
+      // 📊 رجّع للـ dashboard (ربط data)
+      if (onAdd) {
+        onAdd({
+          id: Date.now(),
+          amount: Number(amount),
+          client: client,
+          type: type,
+          date: new Date().toISOString().split("T")[0],
+        });
+      }
+
+      // 🚨 alert
+      if (type === "Fraud") {
+        alert("🚨 FRAUD DETECTED!");
+      } else {
+        alert("✅ Normal Transaction");
+      }
+
+      // reset form
+      setAmount("");
+      setClient("");
+
     } catch (err) {
       console.error(err);
-      alert("Error connecting to API");
+      alert("❌ Backend error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div>
-      <h2>💳 New Transaction</h2>
+    <div style={{ maxWidth: 400, margin: "auto" }}>
+      <h2>💳 New Transaction AI</h2>
 
-      {Object.keys(form).map((key) => (
-        <input
-          key={key}
-          type="number"
-          name={key}
-          placeholder={key}
-          onChange={handleChange}
-        />
-      ))}
+      <input
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+      />
 
-      <button onClick={handleSubmit}>
-        {loading ? "Loading..." : "Check Fraud"}
+      <input
+        placeholder="Client"
+        value={client}
+        onChange={(e) => setClient(e.target.value)}
+      />
+
+      <button onClick={handleSubmit} disabled={loading}>
+        {loading ? "Analyzing..." : "Predict"}
       </button>
 
       {result && (
-        <div style={{ marginTop: "20px" }}>
-          <h3>
-            {result.fraud ? "🔴 FRAUD" : "🟢 NORMAL"}
-          </h3>
-          <p>Score: {result.fraud_score}</p>
+        <div style={{ marginTop: 10 }}>
+          Result: <b>{result}</b>
         </div>
       )}
     </div>

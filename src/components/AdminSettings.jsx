@@ -87,14 +87,6 @@ export default function AdminSettings({ darkMode, setDarkMode }) {
 
           <h2>⚙️ Admin Settings</h2>
 
-          {/* DARK MODE GLOBAL */}
-          <div className="toggle">
-            <span>🌙 Dark Mode</span>
-
-            <div className="switch" onClick={() => setDarkMode(!darkMode)}>
-              <div className="circle"></div>
-            </div>
-          </div>
 
           {/* PASSWORD */}
           <input type="password" placeholder="Current password" />
