@@ -1,49 +1,39 @@
-import { useState } from "react";
-
-import Sidebar from "./components/Sidebar";
-
+import { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import NewTransaction from "./pages/NewTransaction";
-import Clients from "./pages/Clients";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
+import Login from "./pages/Login";
 
-export default function App() {
+function App() {
 
-  const [page, setPage] = useState("dashboard");
+  const [token, setToken] = useState(null);
 
-  const renderPage = () => {
-    switch (page) {
+  useEffect(() => {
+    const saved = localStorage.getItem("token");
+    if (saved) setToken(saved);
+  }, []);
 
-      case "dashboard":
-        return <Dashboard />;
+  const login = (value) => {
+    localStorage.setItem("token", value);
+    setToken(value);
+  };
 
-      case "transaction":
-        return <NewTransaction />;
-
-      case "clients":
-        return <Clients />;
-
-      case "analytics":
-        return <Analytics />;
-
-      case "settings":
-        return <Settings />;
-
-      default:
-        return <Dashboard />;
-    }
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
   };
 
   return (
-    <div style={{ display: "flex" }}>
-
-      <Sidebar setPage={setPage} />
-
-      <div style={{ flex: 1, padding: 20 }}>
-        {renderPage()}
-      </div>
-
-    </div>
+    <Routes>
+      <Route
+        path="/login"
+        element={token ? <Navigate to="/" /> : <Login setToken={login} />}
+      />
+      <Route
+        path="/"
+        element={token ? <Dashboard logout={logout} /> : <Navigate to="/login" />}
+      />
+    </Routes>
   );
 }
+
+export default App;

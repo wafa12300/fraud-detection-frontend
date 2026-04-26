@@ -1,86 +1,55 @@
 import { useState } from "react";
-import { predictFraud } from "../services/api";
 
-export default function NewTransaction({ onAdd }) {
+export default function NewTransaction({ clients = [], addTransaction }) {
+
   const [amount, setAmount] = useState("");
-  const [client, setClient] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [clientId, setClientId] = useState("");
 
-  const handleSubmit = async () => {
-    if (!amount || !client) {
-      alert("⚠ Please fill all fields!");
-      return;
-    }
+  const handleSubmit = () => {
+    if (!amount || !clientId) return;
 
-    setLoading(true);
-    setResult(null);
+    addTransaction(Number(amount), Number(clientId));
 
-    try {
-      // 📡 send to AI backend
-      const res = await predictFraud({
-        amount: Number(amount),
-        client: client,
-      });
-
-      const type = res.data.type;
-      setResult(type);
-
-      // 📊 رجّع للـ dashboard (ربط data)
-      if (onAdd) {
-        onAdd({
-          id: Date.now(),
-          amount: Number(amount),
-          client: client,
-          type: type,
-          date: new Date().toISOString().split("T")[0],
-        });
-      }
-
-      // 🚨 alert
-      if (type === "Fraud") {
-        alert("🚨 FRAUD DETECTED!");
-      } else {
-        alert("✅ Normal Transaction");
-      }
-
-      // reset form
-      setAmount("");
-      setClient("");
-
-    } catch (err) {
-      console.error(err);
-      alert("❌ Backend error");
-    } finally {
-      setLoading(false);
-    }
+    setAmount("");
+    setClientId("");
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: "auto" }}>
-      <h2>💳 New Transaction AI</h2>
+    <div style={{
+      background: "white",
+      padding: 15,
+      borderRadius: 10
+    }}>
 
+      <h3>➕ New Transaction</h3>
+
+      {/* AMOUNT */}
       <input
         placeholder="Amount"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />
 
-      <input
-        placeholder="Client"
-        value={client}
-        onChange={(e) => setClient(e.target.value)}
-      />
+      {/* CLIENT SELECT */}
+      <select
+        value={clientId}
+        onChange={(e) => setClientId(e.target.value)}
+      >
+        <option value="">Select Client</option>
 
-      <button onClick={handleSubmit} disabled={loading}>
-        {loading ? "Analyzing..." : "Predict"}
+        {clients.map(c => (
+          <option key={c.CustomerId} value={c.CustomerId}>
+            {c.Surname} ({c.Country})
+          </option>
+        ))}
+
+      </select>
+
+      {/* BUTTON */}
+      <button onClick={handleSubmit}>
+        Submit
       </button>
 
-      {result && (
-        <div style={{ marginTop: 10 }}>
-          Result: <b>{result}</b>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,4 +1,12 @@
-export default function Sidebar({ active, setActive, setToken, darkMode, setDarkMode }) {
+export default function Sidebar({
+  active,
+  setActive,
+  logout,
+  darkMode,
+  setDarkMode,
+  fraudCount = 0,
+  totalTransactions = 0
+}) {
   return (
     <>
       <style>{`
@@ -12,45 +20,34 @@ export default function Sidebar({ active, setActive, setToken, darkMode, setDark
           padding: 20px;
         }
 
-        .logo {
-          text-align: center;
-          margin-bottom: 35px;
-          font-size: 22px;
-          font-weight: bold;
-        }
-
-        .menu {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
         .item {
-          padding: 12px;
-          border-radius: 10px;
+          padding: 10px;
           cursor: pointer;
-          color: #cbd5e1;
-          transition: 0.3s;
+          border-radius: 8px;
         }
 
         .item:hover {
           background: rgba(255,255,255,0.08);
-          transform: translateX(5px);
         }
 
         .active {
           background: #4f46e5;
-          color: white;
-          font-weight: bold;
+        }
+
+        .box {
+          margin-top: 20px;
+          padding: 12px;
+          background: rgba(255,255,255,0.05);
+          border-radius: 10px;
         }
 
         .logout {
           margin-top: auto;
-          padding: 12px;
+          padding: 10px;
+          background: red;
           border: none;
-          border-radius: 10px;
-          background: #ef4444;
           color: white;
+          border-radius: 10px;
           cursor: pointer;
         }
 
@@ -67,12 +64,17 @@ export default function Sidebar({ active, setActive, setToken, darkMode, setDark
 
       <div className="sidebar">
 
-        <div className="logo">💳 Fraud System</div>
+        <h2>💳 Fraud System</h2>
 
-        <div className="menu">
+        <div>
           <div className={`item ${active === "dashboard" ? "active" : ""}`}
             onClick={() => setActive("dashboard")}>
             Dashboard
+          </div>
+
+          <div className={`item ${active === "clients" ? "active" : ""}`}
+            onClick={() => setActive("clients")}>
+            Clients
           </div>
 
           <div className={`item ${active === "analytics" ? "active" : ""}`}
@@ -80,9 +82,9 @@ export default function Sidebar({ active, setActive, setToken, darkMode, setDark
             Analytics
           </div>
 
-          <div className={`item ${active === "clients" ? "active" : ""}`}
-            onClick={() => setActive("clients")}>
-            Clients
+          <div className={`item ${active === "history" ? "active" : ""}`}
+            onClick={() => setActive("history")}>
+            Transactions History
           </div>
 
           <div className={`item ${active === "settings" ? "active" : ""}`}
@@ -91,15 +93,19 @@ export default function Sidebar({ active, setActive, setToken, darkMode, setDark
           </div>
         </div>
 
-        {/* 🌙 DARK MODE BUTTON */}
-        <button
-          className="darkBtn"
-          onClick={() => setDarkMode(!darkMode)}
-        >
+        <div className="box">
+          📦 Total Transactions: {totalTransactions}
+          <br /><br />
+          🚨 Fraud: {fraudCount}
+        </div>
+
+        <button className="darkBtn"
+          onClick={() => setDarkMode(!darkMode)}>
           {darkMode ? "☀ Light Mode" : "🌙 Dark Mode"}
         </button>
 
-        <button className="logout" onClick={() => setToken(null)}>
+        <button className="logout"
+          onClick={logout}>
           Logout
         </button>
 
