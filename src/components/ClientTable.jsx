@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { blockClient, unblockClient, deleteClient, getClients } from "../services/api";
 
 export default function ClientTable() {
-
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -48,13 +47,13 @@ export default function ClientTable() {
     }
   };
 
-  const filtered = clients.filter(c => {
-    const status = c.is_blocked ? "blocked" : "active";  // ✅ هنا التعديل
+  const filtered = clients.filter((c) => {
+    const status = c.is_blocked ? "blocked" : "active";
     const matchSearch =
       c.Surname?.toLowerCase().includes(search.toLowerCase()) ||
       c.CustomerId?.toString().includes(search) ||
       c.Geography?.toLowerCase().includes(search.toLowerCase()) ||
-      status.includes(search.toLowerCase());  // ✅ هنا التعديل
+      status.includes(search.toLowerCase());
 
     const matchFilter =
       filter === "all" ? true :
@@ -95,8 +94,8 @@ export default function ClientTable() {
           }}
         >
           <option value="all">All ({clients.length})</option>
-          <option value="active">🟢 Active ({clients.filter(c => !c.is_blocked).length})</option>
-          <option value="blocked">🔴 Blocked ({clients.filter(c => c.is_blocked).length})</option>
+          <option value="active">🟢 Active ({clients.filter((c) => !c.is_blocked).length})</option>
+          <option value="blocked">🔴 Blocked ({clients.filter((c) => c.is_blocked).length})</option>
         </select>
       </div>
 
@@ -120,19 +119,12 @@ export default function ClientTable() {
             </tr>
           ) : (
             filtered.map((c) => (
-              <tr
-                key={c.CustomerId}
-                style={{ borderBottom: "1px solid #e2e8f0", textAlign: "center" }}
-              >
+              <tr key={c.CustomerId} style={{ borderBottom: "1px solid #e2e8f0", textAlign: "center" }}>
                 <td style={{ padding: 10 }}>{c.CustomerId}</td>
                 <td style={{ padding: 10 }}>{c.Surname}</td>
                 <td style={{ padding: 10 }}>{c.Geography}</td>
                 <td style={{ padding: 10 }}>{c.Balance}</td>
-                <td style={{
-                  padding: 10,
-                  color: c.is_blocked ? "red" : "green",
-                  fontWeight: "bold"
-                }}>
+                <td style={{ padding: 10, color: c.is_blocked ? "red" : "green", fontWeight: "bold" }}>
                   {c.is_blocked ? "🔴 Blocked" : "🟢 Active"}
                 </td>
                 <td style={{ padding: 10 }}>
@@ -140,25 +132,35 @@ export default function ClientTable() {
                     {c.is_blocked ? (
                       <button
                         onClick={() => handleUnblock(c.CustomerId)}
-                        style={{
-                          background: "green",
-                          color: "white",
-                          padding: "5px 12px",
-                          borderRadius: 4,
-                          border: "none",
-                          cursor: "pointer"
-                        }}
+                        style={{ background: "green", color: "white", padding: "5px 12px", borderRadius: 4, border: "none", cursor: "pointer" }}
                       >
                         ✅ Unblock
                       </button>
                     ) : (
                       <button
                         onClick={() => handleBlock(c.CustomerId)}
-                        style={{
-                          background: "orange",
-                          color: "white",
-                          padding: "5px 12px",
-                          borderRadius: 4,
-                          border: "none",
-                          cursor: "pointer"
-                        }}
+                        style={{ background: "orange", color: "white", padding: "5px 12px", borderRadius: 4, border: "none", cursor: "pointer" }}
+                      >
+                        🚫 Block
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(c.CustomerId)}
+                      style={{ background: "#dc2626", color: "white", padding: "5px 12px", borderRadius: 4, border: "none", cursor: "pointer" }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
+      <p style={{ color: "#94a3b8", marginTop: 10, fontSize: 13 }}>
+        Showing {filtered.length} of {clients.length} clients
+      </p>
+    </div>
+  );
+}
