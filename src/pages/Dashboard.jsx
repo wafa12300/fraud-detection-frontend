@@ -16,6 +16,7 @@ export default function Dashboard({ logout }) {
   const [clients, setClients] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [alert, setAlert] = useState(null);
+  const [alertType, setAlertType] = useState("error"); // ✅ error | warning | success
   const [darkMode, setDarkMode] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState("");
@@ -35,10 +36,23 @@ export default function Dashboard({ logout }) {
   useEffect(() => {
     loadData();
   }, []);
-const addTransaction = async () => {
+
+  const showAlert = (msg, type = "error", duration = 4000) => {
+    setAlert(msg);
+    setAlertType(type);
+    setTimeout(() => setAlert(null), duration);
+  };
+
+  const addTransaction = async () => {
     if (!amount || !clientId) {
-      setAlert("❌ Please select a client and enter amount");
-      setTimeout(() => setAlert(null), 3000);
+      showAlert("❌ Please select a client and enter amount", "error");
+      return;
+    }
+
+    // ✅ check if client is blocked BEFORE sending to backend
+    const selectedClient = clients.find(c => c.CustomerId === Number(clientId));
+    if (selectedClient?.is_blocked) {
+      showAlert("🚫 This client is blocked and cannot make transactions!", "warning", 5000);
       return;
     }
 
@@ -47,6 +61,12 @@ const addTransaction = async () => {
         amount: Number(amount),
         clientId: Number(clientId),
       });
+
+      // ✅ handle blocked response from backend too
+      if (res.data.type === "Blocked" || res.data.error === "Client is blocked") {
+        showAlert("🚫 This client is blocked and cannot make transactions!", "warning", 5000);
+        return;
+      }
 
       const type = res.data.type;
       const client = clients.find(c => c.CustomerId === Number(clientId));
@@ -62,26 +82,33 @@ const addTransaction = async () => {
       };
 
       setTransactions(prev => [newTx, ...prev]);
-      setAlert(type === "Fraud" ? "🚨 FRAUD DETECTED" : "✅ Transaction Normal");
 
       if (type === "Fraud") {
         await blockClient(Number(clientId));
         await loadData();
+        showAlert("🚨 FRAUD DETECTED — Client has been blocked!", "error", 5000);
+      } else {
+        showAlert("✅ Transaction Normal", "success", 3000);
       }
 
-      setTimeout(() => setAlert(null), 3000);
       setAmount("");
       setClientId("");
       setShowForm(false);
 
     } catch (err) {
       console.log("ERROR:", err.response?.data || err.message);
-      setAlert("❌ Backend Error: " + (err.response?.data?.detail || err.message));
-      setTimeout(() => setAlert(null), 5000);
+      showAlert("❌ Backend Error: " + (err.response?.data?.detail || err.message), "error", 5000);
     }
   };
+
   const normal = transactions.filter(t => t.type === "Normal").length;
   const fraud = transactions.filter(t => t.type === "Fraud").length;
+
+  const alertColors = {
+    error: "#dc2626",
+    warning: "#d97706",
+    success: "#16a34a"
+  };
 
   return (
     <div style={{ display: "flex" }}>
@@ -106,15 +133,20 @@ const addTransaction = async () => {
 
         <h1>🚀 Fraud AI Dashboard</h1>
 
+        {/* ✅ Alert with dynamic color */}
         {alert && (
           <div style={{
             position: "fixed",
             top: 20,
             right: 20,
-            background: "red",
+            background: alertColors[alertType],
             color: "white",
-            padding: 10,
-            borderRadius: 8
+            padding: "12px 20px",
+            borderRadius: 8,
+            fontSize: 15,
+            fontWeight: "bold",
+            zIndex: 9999,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)"
           }}>
             {alert}
           </div>
@@ -139,8 +171,12 @@ const addTransaction = async () => {
                 >
                   <option value="">Select Client</option>
                   {clients.map(c => (
-                    <option key={c.CustomerId} value={c.CustomerId}>
-                      {c.Surname} ({c.Country})
+                    <option
+                      key={c.CustomerId}
+                      value={c.CustomerId}
+                      style={{ color: c.is_blocked ? "red" : "inherit" }}
+                    >
+                      {c.is_blocked ? "🔴 " : "🟢 "}{c.Surname} ({c.Geography})
                     </option>
                   ))}
                 </select>
@@ -158,10 +194,7 @@ const addTransaction = async () => {
           </>
         )}
 
-        {/* ✅ ما نعديش clients كـ prop — ClientTable تتحكم بروحها */}
-        {active === "clients" && (
-          <ClientTable />
-        )}
+        {active === "clients" && <ClientTable />}
 
         {active === "analytics" && (
           <FraudChart normalCount={normal} fraudCount={fraud} />
