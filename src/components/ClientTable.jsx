@@ -5,7 +5,7 @@ export default function ClientTable() {
 
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all"); // all, blocked, active
+  const [filter, setFilter] = useState("all");
 
   const loadClients = async () => {
     try {
@@ -48,27 +48,27 @@ export default function ClientTable() {
     }
   };
 
-  // ✅ Filter + Search
   const filtered = clients.filter(c => {
+    const status = c.is_blocked ? "blocked" : "active";  // ✅ هنا التعديل
     const matchSearch =
       c.Surname?.toLowerCase().includes(search.toLowerCase()) ||
       c.CustomerId?.toString().includes(search) ||
-      c.Country?.toLowerCase().includes(search.toLowerCase());
+      c.Geography?.toLowerCase().includes(search.toLowerCase()) ||
+      status.includes(search.toLowerCase());  // ✅ هنا التعديل
 
     const matchFilter =
       filter === "all" ? true :
-      filter === "blocked" ? c.blocked :
-      !c.blocked;
+      filter === "blocked" ? c.is_blocked :
+      !c.is_blocked;
 
     return matchSearch && matchFilter;
   });
 
   return (
     <div>
-      {/* ✅ Search + Filter */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, marginTop: 10 }}>
         <input
-          placeholder="🔍 Search by name, ID, country..."
+          placeholder="🔍 Search by name, ID, country, status..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
@@ -95,8 +95,8 @@ export default function ClientTable() {
           }}
         >
           <option value="all">All ({clients.length})</option>
-          <option value="active">🟢 Active ({clients.filter(c => !c.blocked).length})</option>
-          <option value="blocked">🔴 Blocked ({clients.filter(c => c.blocked).length})</option>
+          <option value="active">🟢 Active ({clients.filter(c => !c.is_blocked).length})</option>
+          <option value="blocked">🔴 Blocked ({clients.filter(c => c.is_blocked).length})</option>
         </select>
       </div>
 
@@ -126,18 +126,18 @@ export default function ClientTable() {
               >
                 <td style={{ padding: 10 }}>{c.CustomerId}</td>
                 <td style={{ padding: 10 }}>{c.Surname}</td>
-                <td style={{ padding: 10 }}>{c.Country}</td>
+                <td style={{ padding: 10 }}>{c.Geography}</td>
                 <td style={{ padding: 10 }}>{c.Balance}</td>
                 <td style={{
                   padding: 10,
-                  color: c.blocked ? "red" : "green",
+                  color: c.is_blocked ? "red" : "green",
                   fontWeight: "bold"
                 }}>
-                  {c.blocked ? "🔴 Blocked" : "🟢 Active"}
+                  {c.is_blocked ? "🔴 Blocked" : "🟢 Active"}
                 </td>
                 <td style={{ padding: 10 }}>
                   <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                    {c.blocked ? (
+                    {c.is_blocked ? (
                       <button
                         onClick={() => handleUnblock(c.CustomerId)}
                         style={{
@@ -162,34 +162,3 @@ export default function ClientTable() {
                           border: "none",
                           cursor: "pointer"
                         }}
-                      >
-                        🚫 Block
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(c.CustomerId)}
-                      style={{
-                        background: "#dc2626",
-                        color: "white",
-                        padding: "5px 12px",
-                        borderRadius: 4,
-                        border: "none",
-                        cursor: "pointer"
-                      }}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-
-      <p style={{ color: "#94a3b8", marginTop: 10, fontSize: 13 }}>
-        Showing {filtered.length} of {clients.length} clients
-      </p>
-    </div>
-  );
-}
